@@ -36,6 +36,7 @@ jobs:
       - uses: dorny/test-reporter@v1.5.0
         if: always()
         with:
+          max-annotations: 0
           name: .NET Tests
           path: ./coverage/*.trx
           reporter: dotnet-trx
