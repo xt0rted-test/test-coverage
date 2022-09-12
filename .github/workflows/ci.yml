@@ -16,17 +16,10 @@ env:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - macos-latest
-          - ubuntu-latest
-          - windows-latest
+    runs-on: ubuntu-latest
 
     permissions:
+      checks: write
       contents: read
 
     steps:
@@ -38,30 +31,11 @@ jobs:
 
       - run: dotnet build
 
-      - run: dotnet test --no-build --logger "trx;LogFilePrefix=${{ matrix.os }}" --results-directory "./coverage"
+      - run: dotnet test --no-build --logger "trx;LogFilePrefix=tests" --results-directory "./coverage"
 
-      - name: Upload test results
-        uses: actions/upload-artifact@v3.1.0
+      - uses: dorny/test-reporter@v1.5.0
         if: always()
         with:
-          name: test-results
-          path: ./coverage/*.trx
-
-  test-results:
-    if: always()
-
-    needs:
-      - build
-
-    runs-on: ubuntu-latest
-
-    permissions:
-      checks: write
-
-    steps:
-      - uses: dorny/test-reporter@v1.5.0
-        with:
-          artifact: test-results
           name: .NET Tests
-          path: "*.trx"
+          path: ./coverage/*.trx
           reporter: dotnet-trx
