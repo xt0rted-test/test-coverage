@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  CONFIGURATION: Release
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3.0.2
+
+      - name: Set up .NET
+        uses: xt0rted/setup-dotnet@v1.4.0
+
+      - run: dotnet build
+
+      - run: dotnet test --no-build --logger "trx;LogFilePrefix=${{ matrix.os }}" --results-directory "./coverage"
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3.1.0
+        if: always()
+        with:
+          name: test-results
+          path: ./coverage/*.trx
